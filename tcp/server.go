@@ -57,6 +57,7 @@ func (s *Server) Run() error {
 	for {
 		select {
 		case <-s.done:
+			l.Close()
 			// clean up
 			return nil
 		default:
