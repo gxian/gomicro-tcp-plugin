@@ -53,11 +53,3 @@ func (c *connection) read() {
 		}
 	}
 }
-
-func (c *connection) Send(b []byte) error {
-	_, err := c.conn.Write(b)
-	if err != nil {
-		return err
-	}
-	return nil
-}

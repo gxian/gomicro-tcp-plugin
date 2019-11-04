@@ -1,18 +1,16 @@
 package tcp
 
 import (
+	"io"
 	"net"
 	"sync"
+	"time"
 )
-
-// SendFunc ...
-type SendFunc func(int, []byte) error
 
 // Multiplexer ...
 type Multiplexer interface {
-	Init(SendFunc)
-	Read(int, []byte) (int, error)
-	Close(int) error
+	Read(io.Writer, []byte) (int, error)
+	Close(io.Writer) error
 }
 
 type readerFunc func([]byte) (int, error)
@@ -29,22 +27,19 @@ func (r closerFunc) Close() error {
 
 // Server ...
 type Server struct {
-	conns map[int]*connection
-	host  string
-	port  string
-	mux   Multiplexer
-	gen   *idgen
-	done  chan bool
-	mu    *sync.Mutex
+	conns  map[io.Writer]*connection
+	accept map[io.Writer]int64
+	addr   string
+	mux    Multiplexer
+	done   chan bool
+	mu     *sync.Mutex
 }
 
 // NewServer ...
-func NewServer(host, port string) *Server {
+func NewServer(addr string) *Server {
 	return &Server{
-		conns: make(map[int]*connection),
-		host:  host,
-		port:  port,
-		gen:   newIDGen(),
+		conns: make(map[io.Writer]*connection),
+		addr:  addr,
 		done:  make(chan bool, 0),
 		mu:    &sync.Mutex{},
 	}
@@ -54,7 +49,7 @@ func NewServer(host, port string) *Server {
 func (s *Server) Run() error {
 	var l net.Listener
 	var err error
-	l, err = net.Listen("tcp", s.host+":"+s.port)
+	l, err = net.Listen("tcp", s.addr)
 	if err != nil {
 		return err
 	}
@@ -70,29 +65,32 @@ func (s *Server) Run() error {
 				return err
 			}
 			// TODO: accept timeout处理
-			s.handleRequest(conn)
+			s.handleAccept(conn)
 		}
 	}
 }
 
-func (s *Server) muxReader(id int) readerFunc {
+func (s *Server) muxReader(w io.Writer) readerFunc {
+	delete(s.accept, w)
 	return func(b []byte) (int, error) {
-		return s.mux.Read(id, b)
+		return s.mux.Read(w, b)
 	}
 }
 
-func (s *Server) muxCloser(id int) closerFunc {
+func (s *Server) muxCloser(w io.Writer) closerFunc {
 	// del s.conns
+	delete(s.conns, w)
+	delete(s.accept, w)
 	return func() error {
-		return s.mux.Close(id)
+		return s.mux.Close(w)
 	}
 }
 
-func (s *Server) handleRequest(conn net.Conn) {
+func (s *Server) handleAccept(conn net.Conn) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	id := s.gen.Get()
-	c := newConnection(conn, s.muxReader(id), s.muxCloser(id))
-	s.conns[id] = c
+	c := newConnection(conn, s.muxReader(conn), s.muxCloser(conn))
+	s.conns[conn] = c
+	s.accept[conn] = time.Now().Unix()
 	go c.Start()
 }
