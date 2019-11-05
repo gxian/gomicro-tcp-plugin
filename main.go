@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"gomicro-tcp-plugin/game"
+	"gomicro-tcp-plugin/game/message"
 	"gomicro-tcp-plugin/tcp"
 )
 
@@ -17,7 +18,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	codec := game.NewCodec()
+	codec := message.NewGateCodec()
 	mux := game.NewMultiplexer(codec)
 	srv := tcp.NewServer(addr, mux)
 	err := srv.Run()

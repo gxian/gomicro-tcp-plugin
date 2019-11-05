@@ -1,5 +1,14 @@
 package game
 
+// Message ...
+type Message interface {
+	HeaderLen() uint16
+	ID() int32
+	BodyLen() int32
+	Header() []byte
+	Body() []byte
+}
+
 // Encoder ...
 type Encoder interface {
 	Encode(Message) ([]byte, error)
@@ -14,20 +23,4 @@ type Decoder interface {
 type Codec interface {
 	Encoder
 	Decoder
-}
-
-type defaultCodec struct {
-}
-
-func (d *defaultCodec) Encode(m Message) ([]byte, error) {
-	return []byte{}, nil
-}
-
-func (d *defaultCodec) Decode(b []byte) (int, Message, error) {
-	return 0, nil, nil
-}
-
-// NewCodec ...
-func NewCodec() Codec {
-	return &defaultCodec{}
 }

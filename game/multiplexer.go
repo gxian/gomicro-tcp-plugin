@@ -86,7 +86,7 @@ func (m *Multiplexer) Read(w io.Writer, b []byte) (int, error) {
 		// handle message
 		m.mu.Lock()
 		defer m.mu.Unlock()
-		h, ok := m.handlers[int(msg.Header().MsgID())]
+		h, ok := m.handlers[int(msg.ID())]
 		if !ok {
 			return n, nil
 		}
