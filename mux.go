@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 // Encoder ...
 type Encoder interface {
 	Encode(Message) ([]byte, error)
@@ -23,7 +25,7 @@ type Sender interface {
 
 // Handler ...
 type Handler interface {
-	Handle(Message)
+	Handle(Message, Sender)
 }
 
 // Header ...
@@ -42,20 +44,28 @@ type Message interface {
 
 // Multiplexer ...
 type Multiplexer struct {
+	codec    Codec
+	handlers map[int]Handler
+	mu       *sync.Mutex
 }
 
 // NewMultiplexer ...
 func NewMultiplexer(c Codec) *Multiplexer {
-	return &Multiplexer{}
+	return &Multiplexer{
+		codec:    c,
+		handlers: make(map[int]Handler),
+		mu:       &sync.Mutex{},
+	}
 }
 
 // HandleFunc ...
-func (m *Multiplexer) HandleFunc(msg int, s Sender, h Handler) {
-
+func (m *Multiplexer) HandleFunc(id int, h Handler) {
+	m.handlers[id] = h
 }
 
 // Read ...
 func (m *Multiplexer) Read(b []byte) (int, error) {
+	// 断包处理
 	return 0, nil
 }
 

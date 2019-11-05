@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"gomicro-tcp-plugin/tcp"
 )
 
 var (
@@ -14,4 +16,9 @@ func init() {
 
 func main() {
 	flag.Parse()
+	srv := tcp.NewServer(addr)
+	err := srv.Run()
+	if err != nil {
+		fmt.Println(err)
+	}
 }
