@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gomicro-tcp-plugin/game"
 	"gomicro-tcp-plugin/tcp"
 )
 
@@ -16,7 +17,9 @@ func init() {
 
 func main() {
 	flag.Parse()
-	srv := tcp.NewServer(addr)
+	codec := game.NewCodec()
+	mux := game.NewMultiplexer(codec)
+	srv := tcp.NewServer(addr, mux)
 	err := srv.Run()
 	if err != nil {
 		fmt.Println(err)

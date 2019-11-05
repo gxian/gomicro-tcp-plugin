@@ -36,11 +36,12 @@ type Server struct {
 }
 
 // NewServer ...
-func NewServer(addr string) *Server {
+func NewServer(addr string, mux Multiplexer) *Server {
 	return &Server{
 		conns: make(map[io.Writer]*connection),
 		addr:  addr,
 		done:  make(chan bool, 0),
+		mux:   mux,
 		mu:    &sync.Mutex{},
 	}
 }
@@ -65,7 +66,7 @@ func (s *Server) Run() error {
 			if err != nil {
 				return err
 			}
-			// TODO: accept timeout处理
+			// TODO: accept timeout
 			s.handleAccept(conn)
 		}
 	}

@@ -1,26 +1,10 @@
-package main
+package game
 
 import (
 	"bytes"
 	"io"
 	"sync"
 )
-
-// Encoder ...
-type Encoder interface {
-	Encode(Message) ([]byte, error)
-}
-
-// Decoder ...
-type Decoder interface {
-	Decode([]byte) (int, Message, error)
-}
-
-// Codec ...
-type Codec interface {
-	Encoder
-	Decoder
-}
 
 // SendFunc ...
 type SendFunc func(Message) error
@@ -38,20 +22,6 @@ type Sender interface {
 // Handler ...
 type Handler interface {
 	Handle(Message, Sender)
-}
-
-// Header ...
-type Header interface {
-	BodySize() uint16
-	Checksum() uint16
-	Timestamp() int32
-	MsgID() int32
-}
-
-// Message ...
-type Message interface {
-	Header() Header
-	Body() []byte
 }
 
 // Multiplexer ...
@@ -92,7 +62,7 @@ func (m *Multiplexer) HandleFunc(id int, h Handler) {
 
 // Read ...
 func (m *Multiplexer) Read(w io.Writer, b []byte) (int, error) {
-	// 断包处理
+	// write to buf
 	m.mu.Lock()
 	buf, ok := m.bufs[w]
 	if !ok {
@@ -113,7 +83,7 @@ func (m *Multiplexer) Read(w io.Writer, b []byte) (int, error) {
 	}
 
 	if n != 0 {
-		// 包体完整
+		// handle message
 		m.mu.Lock()
 		defer m.mu.Unlock()
 		h, ok := m.handlers[int(msg.Header().MsgID())]
@@ -122,7 +92,7 @@ func (m *Multiplexer) Read(w io.Writer, b []byte) (int, error) {
 		}
 		h.Handle(msg, m.wrapSender(w))
 
-		// 偏移buf
+		// offset buf
 		buf.Next(n)
 	}
 

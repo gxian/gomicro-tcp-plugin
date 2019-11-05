@@ -1,4 +1,4 @@
-package main
+package game
 
 type session struct {
 	users map[int]int // userID:connID
