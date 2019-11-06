@@ -18,9 +18,12 @@ func init() {
 
 func main() {
 	flag.Parse()
-	codec := message.NewGateCodec()
-	mux := game.NewMultiplexer(codec)
-	srv := tcp.NewServer(addr, mux)
+	srv := tcp.NewServer(
+		addr,
+		game.NewMultiplexer(
+			message.NewGateCodec(),
+		),
+	)
 	err := srv.Run()
 	if err != nil {
 		fmt.Println(err)
