@@ -28,29 +28,25 @@ type Gate struct {
 	Payload   []byte
 }
 
-// HeaderLen ...
-func (g *Gate) HeaderLen() uint16 {
-	return HeaderLen
-}
-
 // ID ...
 func (g *Gate) ID() int32 {
-	return 0
-}
-
-// BodyLen ...
-func (g *Gate) BodyLen() int32 {
-	return 0
-}
-
-// Header ...
-func (g *Gate) Header() []byte {
-	return []byte{}
+	return g.MsgID
 }
 
 // Body ...
 func (g *Gate) Body() []byte {
-	return []byte{}
+	return g.Payload
+}
+
+// Bytes ...
+func (g *Gate) Bytes() []byte {
+	b := make([]byte, HeaderLen+g.BodySize)
+	binary.LittleEndian.PutUint16(b[:bodySizeBegin], g.BodySize)
+	binary.LittleEndian.PutUint16(b[checksumBegin:checksumEnd], g.Checksum)
+	binary.LittleEndian.PutUint32(b[timestampBegin:timestampEnd], uint32(g.Timestamp))
+	binary.LittleEndian.PutUint32(b[msgIDBegin:msgIDEnd], uint32(g.MsgID))
+	copy(b[HeaderLen:], g.Payload)
+	return b
 }
 
 type gateCodec struct {
@@ -63,7 +59,7 @@ func NewGateCodec() game.Codec {
 
 // Encode ...
 func (g *gateCodec) Encode(m game.Message) ([]byte, error) {
-	return []byte{}, nil
+	return m.Bytes(), nil
 }
 
 // Decode ...

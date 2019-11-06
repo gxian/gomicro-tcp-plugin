@@ -2,11 +2,9 @@ package game
 
 // Message ...
 type Message interface {
-	HeaderLen() uint16
 	ID() int32
-	BodyLen() int32
-	Header() []byte
 	Body() []byte
+	Bytes() []byte
 }
 
 // Encoder ...
