@@ -85,11 +85,12 @@ func (m *Multiplexer) Read(w io.Writer, b []byte) (int, error) {
 	if n != 0 {
 		// handle message
 		m.mu.Lock()
-		defer m.mu.Unlock()
 		h, ok := m.handlers[int(msg.ID())]
 		if !ok {
+			m.mu.Unlock()
 			return n, nil
 		}
+		m.mu.Unlock()
 		h.Handle(msg, m.wrapSender(w))
 
 		// offset buf
