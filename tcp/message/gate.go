@@ -3,7 +3,7 @@ package message
 import (
 	"encoding/binary"
 
-	"gomicro-tcp-plugin/game"
+	"gomicro-tcp-plugin/tcp"
 )
 
 const (
@@ -53,17 +53,17 @@ type gateCodec struct {
 }
 
 // NewGateCodec ...
-func NewGateCodec() game.Codec {
+func NewGateCodec() tcp.Codec {
 	return &gateCodec{}
 }
 
 // Encode ...
-func (g *gateCodec) Encode(m game.Message) ([]byte, error) {
+func (g *gateCodec) Encode(m tcp.Message) ([]byte, error) {
 	return m.Bytes(), nil
 }
 
 // Decode ...
-func (g *gateCodec) Decode(b []byte) (int, game.Message, error) {
+func (g *gateCodec) Decode(b []byte) (int, tcp.Message, error) {
 	total := int32(len(b))
 	if total < HeaderLen {
 		return 0, nil, nil

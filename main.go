@@ -3,9 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gomicro-tcp-plugin/game"
-	"gomicro-tcp-plugin/game/message"
 	"gomicro-tcp-plugin/tcp"
+	"gomicro-tcp-plugin/tcp/message"
 )
 
 var (
@@ -20,7 +19,7 @@ func main() {
 	flag.Parse()
 	srv := tcp.NewServer(
 		addr,
-		game.NewMultiplexer(
+		tcp.NewMultiplexer(
 			message.NewGateCodec(),
 		),
 	)

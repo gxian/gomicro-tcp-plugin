@@ -1,4 +1,4 @@
-package game
+package tcp
 
 import (
 	"bytes"
@@ -24,8 +24,8 @@ type Handler interface {
 	Handle(Message, Sender)
 }
 
-// Multiplexer ...
-type Multiplexer struct {
+// Multiplex ...
+type Multiplex struct {
 	codec    Codec
 	handlers map[int]Handler
 	bufs     map[io.Writer]*bytes.Buffer
@@ -33,8 +33,8 @@ type Multiplexer struct {
 }
 
 // NewMultiplexer ...
-func NewMultiplexer(c Codec) *Multiplexer {
-	return &Multiplexer{
+func NewMultiplexer(c Codec) Multiplexer {
+	return &Multiplex{
 		codec:    c,
 		handlers: make(map[int]Handler),
 		bufs:     make(map[io.Writer]*bytes.Buffer),
@@ -42,7 +42,7 @@ func NewMultiplexer(c Codec) *Multiplexer {
 	}
 }
 
-func (m *Multiplexer) wrapSender(w io.Writer) SendFunc {
+func (m *Multiplex) wrapSender(w io.Writer) SendFunc {
 	return func(message Message) error {
 		b, err := m.codec.Encode(message)
 		if err != nil {
@@ -54,14 +54,14 @@ func (m *Multiplexer) wrapSender(w io.Writer) SendFunc {
 }
 
 // HandleFunc ...
-func (m *Multiplexer) HandleFunc(id int, h Handler) {
+func (m *Multiplex) HandleFunc(id int, h Handler) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.handlers[id] = h
 }
 
 // Read ...
-func (m *Multiplexer) Read(w io.Writer, b []byte) (int, error) {
+func (m *Multiplex) Read(w io.Writer, b []byte) (int, error) {
 	// write to buf
 	m.mu.Lock()
 	buf, ok := m.bufs[w]
@@ -101,7 +101,7 @@ func (m *Multiplexer) Read(w io.Writer, b []byte) (int, error) {
 }
 
 // Close ...
-func (m *Multiplexer) Close(w io.Writer) error {
+func (m *Multiplex) Close(w io.Writer) error {
 	// clear writer buf
 	return nil
 }

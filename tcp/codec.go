@@ -1,4 +1,4 @@
-package game
+package tcp
 
 // Message ...
 type Message interface {
