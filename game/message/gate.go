@@ -73,8 +73,9 @@ func (g *gateCodec) Decode(b []byte) (int, game.Message, error) {
 		return 0, nil, nil
 	}
 	bodySize := binary.LittleEndian.Uint16(b[:bodySizeEnd])
-	// 长度验证
-	if total < int32(bodySize+HeaderLen) {
+	msgLen := int(HeaderLen + bodySize)
+	if total < int32(msgLen) {
+		// incomplete
 		return 0, nil, nil
 	}
 	checksum := binary.LittleEndian.Uint16(b[checksumBegin:checksumEnd])
@@ -92,23 +93,7 @@ func (g *gateCodec) Decode(b []byte) (int, game.Message, error) {
 		MsgID:     msgID,
 	}
 
-	/*
-		// decod msgid
-		if tm == 0 {
-			id = 0
-		} else {
-			id = id / (tm%10000 + 1)
-		}
-		// body
-		body := make([]byte, bodysz)
-		copy(body, bs[12:12+bodysz])
-		// 构造msg
-		msg := &Msg{
-			BodySize:  uint16(bodysz),
-			CheckSum:  uint16(sum),
-			TimeStamp: tm,
-			MsgID:     id,
-			Body:      body,
-		}*/
-	return 0, msg, nil
+	msg.Payload = make([]byte, msg.BodySize)
+	copy(msg.Payload, b[HeaderLen:msgLen])
+	return msgLen, msg, nil
 }
