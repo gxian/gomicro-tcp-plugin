@@ -11,8 +11,15 @@ var (
 	addr string
 )
 
+type msg struct {
+}
+
+// 测试是否connection accept之后超时会被踢掉;包体异常大小处理
+// 测试百级并发连接下消息处理速度和时延
+// 完善日志信息用于正式联调
+
 func init() {
-	flag.StringVar(&addr, "address", "", "listen address")
+	flag.StringVar(&addr, "address", "", "server address")
 }
 
 func main() {
